@@ -1,19 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
+using BlazorApp1.Services;
+
+namespace BlazorApp1.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TestController : ControllerBase
+public class OrdersController : ControllerBase
 {
-    [HttpGet]
-    public IActionResult Get()
-    {
-        var data = new[]
-        {
-            new { Id = 1, Name = "First Entry" },
-            new { Id = 2, Name = "Second Entry" },
-            new { Id = 3, Name = "Third Entry" }
-        };
+    private readonly OrderService _service;
 
-        return Ok(data);
+    public OrdersController(OrderService service)
+    {
+        _service = service;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Get()
+    {
+        return Ok(await _service.GetAllOrdersAsync());
     }
 }

@@ -1,27 +1,80 @@
-@page "/TestAPI"
-@inject ApiService ApiService
+@page "/orders"
+@rendermode InteractiveServer
+@using BlazorApp1.Models
+@inject OrderService OrderService
 
-<h3>Items</h3>
+<h3> Orders </h3>
 
-@if (items == null)
+<div class="row mb-3">
+    <div class="col-md-3">
+        <label>Start Date</label>
+        <InputDate @bind-Value="startDate" class="form-control" />
+    </div>
+
+    <div class="col-md-3">
+        <label>End Date</label>
+        <InputDate @bind-Value="endDate" class="form-control" />
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end">
+        <button class="btn btn-primary" @onclick="LoadData">
+            Load Data
+        </button>
+    </div>
+</div>
+
+@if (orders is null)
 {
     <p>Loading...</p>
 }
+else if (!orders.Any())
+{
+    <p>No data found for selected range.</p>
+}
 else
 {
-    <ul>
-        @foreach (var item in items)
-        {
-            <li>@item.Name</li>
-        }
-    </ul>
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var o in orders)
+            {
+                <tr>
+                    <td>@o.OrderId</td>
+                    <td>@o.OrderDate.ToString("MMM dd, yyyy")</td>
+                    <td>@o.CustomerName</td>
+                    <td>@o.TotalPrice.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <p>Total rows: @orders.Count</p>
 }
 
 @code {
-    List<Item>? items;
+    private List<OrderTotal>? orders;
+
+    private DateOnly? startDate;
+    private DateOnly? endDate;
 
     protected override async Task OnInitializedAsync()
     {
-        items = await ApiService.GetItems();
+       // loads default (last 30 days)
+        endDate = DateOnly.FromDateTime(DateTime.Today);
+        startDate = endDate.Value.AddDays(-30);
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        orders = await OrderService.GetOrdersByDateRangeAsync(startDate, endDate);
     }
 }
